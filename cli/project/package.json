@@ -1,0 +1,12 @@
+{
+  "name": "project",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "esbuild index.js --platform=node  --format=cjs  --bundle --outdir=dist && node dist/index.js"
+  },
+  "dependencies": {
+    "esbuild": "latest",
+    "telegraf": "latest",
+    "dotenv": "latest"
+  }
+}
