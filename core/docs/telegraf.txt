@@ -1,0 +1,52 @@
+#title
+telegrafjs: Telegram Bot library for nodejs
+
+
+#docs
+
+const { Telegraf } = require('telegraf');
+const { message } = require('telegraf/filters');
+
+--1
+const bot = new Telegraf(process.env.BOT_TOKEN);
+bot.start((ctx) => ctx.reply('Welcome'));
+bot.help((ctx) => ctx.reply('Send me a sticker'));
+bot.on(message('sticker'), (ctx) => ctx.reply('👍'));
+bot.on(message('text'), (ctx) => ctx.reply('')); // for any text message coming
+bot.hears('hi', (ctx) => ctx.reply('Hey there'));
+bot.launch();
+
+--2
+const { Telegraf } = require('telegraf');
+
+const bot = new Telegraf(process.env.BOT_TOKEN);
+bot.command('oldschool', (ctx) => ctx.reply('Hello'));
+bot.command('hipster', Telegraf.reply('λ'));
+bot.launch();
+
+-- for send media
+import { Input } from 'telegraf';
+
+bot.on('message', async (ctx) => {
+  // resend existing file by file_id
+  await ctx.replyWithSticker('123123jkbhj6b');
+
+  // send file
+  await ctx.replyWithVideo(Input.fromLocalFile('/path/to/video.mp4'));
+
+  // send stream
+  await ctx.replyWithVideo(Input.fromReadableStream(fs.createReadStream('/path/to/video.mp4')));
+
+  // send buffer
+  await ctx.replyWithVoice(Input.fromBuffer(Buffer.alloc()));
+
+  // send url via Telegram server
+  await ctx.replyWithPhoto(Input.fromURL('https://picsum.photos/200/300/'));
+
+  // pipe url content
+  await ctx.replyWithPhoto(Input.fromURLStream('https://picsum.photos/200/300/?random', 'kitten.jpg'));
+})
+
+
+note: the bot.launch(); alwayse should be in end of codes if its just telegram bot app
+if its a expressjs server or somthing similar , so dont need to use that

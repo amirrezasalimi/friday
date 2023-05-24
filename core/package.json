@@ -1,0 +1,17 @@
+{
+  "name": "@friday/core",
+  "version": "0.0.1",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "esbuild src/index.js --platform=node  --format=cjs  --bundle --outdir=dist && node dist/index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "esbuild": "^0.17.19",
+    "fs": "^0.0.1-security",
+    "node-fetch": "^3.3.1"
+  }
+}
