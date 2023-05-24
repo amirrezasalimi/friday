@@ -29093,20 +29093,17 @@ function fixResponseChunkedTransferBadEnding(request, errorCallback) {
 
 // ../../core/src/ai-chat.js
 var AiService = class {
-  async generate({ messages = [], config: config2 = {
-    apiKey,
-    endPoint
-  } }) {
+  async generate({ messages = [], config: config2 }) {
     const _config = {
       model: "gpt-4",
       temperature: 0.7,
       ...config2
     };
-    switch (model) {
+    switch (_config.model) {
       case "gpt-4":
       case "gpt-4-32k":
       case "gpt-3.5-turbo":
-        return gptChatReq(_config);
+        return this.gptChatReq({ config: config2, messages });
     }
   }
   gptChatReq({ config: config2, messages }) {
@@ -29120,13 +29117,15 @@ var AiService = class {
       "temperature": config2.temperature
     };
     return new Promise((resolve, reject) => {
-      return fetch(config2.endPoint, {
+      return fetch(`${config2.endPoint}/chat/completions`, {
         method: "POST",
         headers,
         body: JSON.stringify(data)
-      }).then((response) => response.json()).then((result) => {
-        return resolve(result);
+      }).then((res) => res.json()).then((res) => {
+        console.log(JSON.stringify(res, 1, 1));
+        return resolve(res);
       }).catch((error) => {
+        console.log(error);
         return reject(error);
       });
     });
@@ -29191,22 +29190,23 @@ var FridayNodeJs = class {
           {
             "role": "user",
             "content": `
-    you are an expert nodejs developer , according to the prompt , give used packages in a json string list with their version if needed , choose a test package(from the prompt context) if need,
-    use @latest in the end of them if needed.
-    
-    prompt:
-    ${basePrompt}
-    
-    answer in this format(json string list for each ):
-    packages:
-    ["test@latest"]
-    test packages:
-    []
++ you are an expert nodejs es6 developer.
++ according to the prompt context and used packages in it , give used packages in a json list format : []
++ if packages versions not known use @latest on end of them
+
+prompt:
+${basePrompt}
+
+answer in this format(json string list for each ):
+packages:
+["test@latest"]
+test packages:
+[]
     `
           }
         ]
       });
-      const msg1 = res1.data.choices[0].message.content;
+      const msg1 = res1.choices[0].message.content;
       const regex = /packages:([\s\S]*?)test packages:([\s\S]*)/;
       const matches = regex.exec(msg1);
       if (matches) {
@@ -29229,46 +29229,48 @@ var FridayNodeJs = class {
           {
             "role": "user",
             "content": `
-    according to my context  i give you the used packages names with their version , then you should implement a very basic index.js file codes in es6 js , attention to roles
-    roles
-    - use context just for making base code, no extra talk and comments
-    - there should no action or any comment in the code
-    - use dotenv package anyway
-    - don't override the "DONT_TOUCH_THIS" 
-    - don't use markdown for codes
-    - sample:
-    context: 
-    a simple discord bot
-    packages names: discord.js@latest
-    
-    .env:for
-    
-    TOKEN=xx
-    index.js:
-    import { Client, GatewayIntentBits } from 'discord.js';
-    const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+according to my context , i give you the used packages names with their version , then you should implement a very basic index.js file codes in es6 js , attention to roles.
+roles:
+- use context just for making base code, no extra talk and comments
+- there should no action or any comment in the code
+- use dotenv package anyway
+- don't override the "DONT_TOUCH_THIS" 
+- don't use markdown for codes
+- packages imports should be all in es6 format
 
-    {DONT_TOUCH_THIS}
-    client.login(process.env.TOKEN);
-    
-    context:
-    ${basePrompt}
-    - use dotenv package 
-    
-    packages used:
-    ${data.packages.join(",")}
-    
-    answer in this format:
-    
-    .env:
-    
-    index.js
-    
-    `
+- sample:
+context: 
+a simple discord bot
+use discord.js@latest and ...
+
+.env:
+
+TOKEN=xx
+index.js:
+import { Client, GatewayIntentBits } from 'discord.js';
+const client = new Client({ intents: [GatewayIntentBits.Guilds] });
+
+{DONT_TOUCH_THIS}
+client.login(process.env.TOKEN);
+
+context:
+${basePrompt}
+- use dotenv package 
+
+packages used:
+${data.packages.join(",")}
+
+answer in this format:
+
+.env:
+
+index.js
+
+`
           }
         ]
       });
-      const msg2 = res2.data.choices[0].message.content;
+      const msg2 = res2.choices[0].message.content;
       const regex2 = /.env:([\s\S]*?)index.js:([\s\S]*)/;
       const matches2 = regex2.exec(msg2);
       data.base_code = removeCodeSnippet(matches2[2]);
@@ -29284,59 +29286,64 @@ var FridayNodeJs = class {
             {
               "role": "user",
               "content": `
-    you are an expert nodejs es6 developer , i give you needed section and please give me the missing codes only.
-    
-    index.js description:
-    ${basePrompt}
-    used packages: ${data.packages.join(",")}
-    
-    index.js codes:
-    ${data.base_code}
-    
-    needed section instruction:
-    ${taskPrompt}
-    
-    + roles 
-    - only give missing codes not complete
-    - attention to the needed section instruction , and write only needed codes not any more
-    don't write codes that not requested in needed section
-    only give missing codes without talk
-    - if no any new package added just use empty [] in there
-    - if no need to any imports just  let empty that section
-    
-    - list all used packages of new codes  in packages used section .
-    - packages used is a string array , if u want provide version use this pattern : package@version
-    - if used packages and imports exists in the index.js codes , do not add it to current packages used and imports list. 
-    - don't use markdown for new codes and imports in answer
-    - your codes has no any bugs or syntax problems
-    
-    answer in this format(exactly in this format):
-    packages used:
-    ["test@latest"]
-    
-    imports:
-    import x from 'y'
-    
-    new codes:
-    
-    `
+you are an expert nodejs es6 developer , i give you needed section and please give me the missing codes only.
+
+index.js description:
+${basePrompt}
+used packages: ${data.packages.join(",")}
+
+index.js codes:
+${data.base_code}
+
+needed section instruction:
+${taskPrompt}
+
++ roles 
+- only give missing codes not complete
+- attention to the needed section instruction , and write only needed codes not any more
+don't write codes that not requested in needed section
+only give missing codes without talk
+- if no need to any imports just let empty that section
+
+- if imports exists in the index.js codes , do not add it imports . 
+- don't use markdown for new codes and imports in answer
+- your codes has no any bugs or syntax problems
+
+- search for all used packages in new codes and list them in "used packages" section , like sample.
+
+
+answer exactly in this format:
+
+imports:
+import x from 'y'
+
+
+new codes:
+
+
+used packages:
+["test@latest"]
+`
             }
           ]
         });
-        const taskMsg = taskRes.data.choices[0].message.content;
-        const packagesRegex = /packages used:\s*([\s\S]*?)(?=\n\n|\n*$)/g;
-        const importsRegex = /imports:\s*([\s\S]*?)(?=\n\n|\n*$)/g;
-        const newCodesRegex = /new codes:\s*([\s\S]*)/g;
-        const packagesMatch = taskMsg.match(packagesRegex);
-        const importsMatch = taskMsg.match(importsRegex);
-        const newCodesMatch = taskMsg.match(newCodesRegex);
-        const imports = importsMatch[0].trim().replace("imports:", "");
-        const packagesUsed = packagesMatch ? packagesMatch[0].replace("packages used:", "") : "[]";
-        const newCodes = newCodesMatch[0].trim().replace("new codes:", "");
-        const pkgsUsed = JSON.parse(packagesUsed);
+        const text = taskRes.choices[0].message.content;
+        console.log(text);
+        const usedPackagesRegex = /used packages:\n(\[.*?\])/s;
+        const usedPackagesMatch = text.match(usedPackagesRegex);
+        const usedPackages = usedPackagesMatch ? JSON.parse(usedPackagesMatch[1]) : [];
+        console.log("Used Packages:", usedPackages);
+        const newCodesRegex = /new codes:\n+([\s\S]*?)(?=\n\nused packages:|$)/i;
+        const newCodesMatch = text.match(newCodesRegex);
+        const newCodes = newCodesMatch ? newCodesMatch[1].trim() : "";
+        console.log("New Codes:", newCodes);
+        const importsRegex = /imports:(.*?)new codes:/ims;
+        const importsMatch = text.match(importsRegex);
+        const imports = importsMatch ? importsMatch[1].trim() : "";
+        console.log("Imports:", imports);
         data.packages = [
           ...data.packages,
-          ...pkgsUsed
+          ...usedPackages
         ];
         data.imports = [
           ...data.imports,
@@ -29360,7 +29367,6 @@ var FridayNodeJs = class {
         time: runtimeMs
       });
     } catch (e2) {
-      console.log(e2.response);
       yield this.res({
         title: `Error happend
 :${e2.message}`,
@@ -29425,15 +29431,14 @@ app.use((0, import_cors.default)());
 app.use(import_body_parser.default.json());
 app.post("/gen", async (req, res) => {
   const { core, sections } = req.body;
-  console.log(core, req.body, sections);
   const fr = new friday_nodejs_default({
     aiConfig: {
       apiKey: process.env.AI_TOKEN,
       endPoint: process.env.AI_ENDPOINT,
-      model: "gpt-4-32k"
+      model: "gpt-4"
     }
   });
-  const fridayRes = await fr.generate(core, sections);
+  const fridayRes = await fr.generate({ basePrompt: core, sections });
   console.log(fridayRes);
   res.writeHead(200, {
     "Content-Type": "application/json",

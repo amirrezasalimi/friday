@@ -2,20 +2,17 @@ import fetch from "node-fetch";
 
 // supported models: gpt-3.5-turbo, gpt-4 , gpt-4-32k
 class AiService {
-    async generate({ messages = [], config = {
-        apiKey,
-        endPoint,
-    } }) {
+    async generate({ messages = [], config}) {
         const _config = {
             model: "gpt-4",
             temperature: 0.7,
             ...config
         }
-        switch (model) {
+        switch (_config.model) {
             case "gpt-4":
             case "gpt-4-32k":
             case "gpt-3.5-turbo":
-                return gptChatReq(_config);
+                return this.gptChatReq({config,messages});
         }
     }
     gptChatReq({ config, messages }) {
@@ -31,16 +28,18 @@ class AiService {
         };
 
         return new Promise((resolve, reject) => {
-            return fetch(config.endPoint, {
+            return fetch(`${config.endPoint}/chat/completions`, {
                 method: 'POST',
                 headers: headers,
                 body: JSON.stringify(data)
             })
-                .then(response => response.json())
-                .then(result => {
-                    return resolve(result);
+                .then((res)=>res.json())
+                .then(res => {
+                    console.log(JSON.stringify(res,1,1));
+                    return resolve(res);
                 })
                 .catch(error => {
+                    console.log(error);
                     return reject(error);
                 });
         })

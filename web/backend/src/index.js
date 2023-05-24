@@ -12,16 +12,16 @@ app.use(cors())
 app.use(bodyParser.json());
 app.post('/gen', async (req, res) => {
     const { core, sections } = req.body;
-    console.log(core, req.body, sections);
+    // console.log(core, req.body, sections);
 
     const fr = new FridayNodeJs({
         aiConfig: {
             apiKey: process.env.AI_TOKEN,
             endPoint: process.env.AI_ENDPOINT,
-            model: "gpt-4-32k"
+            model: "gpt-4"
         }
     })
-    const fridayRes = await fr.generate(core, sections);
+    const fridayRes = await fr.generate({basePrompt:core, sections});
     console.log(fridayRes);
     res.writeHead(200, {
         'Content-Type': 'application/json',
