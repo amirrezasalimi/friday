@@ -57,6 +57,13 @@ Make sure to install the necessary dependencies by running `npm install` for bot
 
 Now you should be able to access and use Friday through the frontend interface. on http://localhost:5173
 
+> after getting "Done" message in ui , your project will create on the `projects/last` directory
+1. check .env file and change it if need 
+2. run `npm i` to install packages
+3. run `npm run start` to start your project
+
+
+
 ## Known Bugs
 
 - Occasionally, Friday may not include used packages in the `packages.json` file. If you encounter missing packages after running `npm run start`, please install them manually.
