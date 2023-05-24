@@ -2,7 +2,7 @@ import express from 'express';
 import bodyParser from "body-parser";
 import { config } from "dotenv";
 import cors from "cors"
-import { FridayNodeJs } from '../../../core/src';
+import { FridayNodeJs } from '@friday/core';
 config();
 
 const app = express();
